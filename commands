@@ -74,8 +74,10 @@ case "$1" in
     echo
     echo "       Status: $SINOPIA_STATUS"
     echo "       Container: $SINOPIA_CONTAINER"
+    if [[ ! -z $SINOPIA_CONTAINER_RUNNING ]]; then
     echo "       Container IP: $SINOPIA_IP"
     echo "       Container PORT: 4873"
+    fi
     echo
     ;;
     
