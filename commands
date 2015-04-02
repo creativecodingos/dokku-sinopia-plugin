@@ -96,7 +96,7 @@ case "$1" in
     ;;
     
   sinopia:start)
-    if [[ -z $SINOPIA_CONTAINER_RUNNING ]]; then
+    if [[ ! -z $SINOPIA_CONTAINER_RUNNING ]]; then
       echo
       echo "-----> Sinopia is already running"
       echo
@@ -109,7 +109,6 @@ case "$1" in
       else
         echo
         echo "-----> Restarting Sinopia container..."
-        echo
         docker start $SINOPIA_CONTAINER > /dev/null
         sleep 5
         echo "       Done."
