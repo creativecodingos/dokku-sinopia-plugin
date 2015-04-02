@@ -37,7 +37,7 @@ case "$1" in
       echo "       Done."
       echo
     fi
-    if [[ -z $SINOPIA_CONTAINER]]; then
+    if [[ -z $SINOPIA_CONTAINER ]]; then
       echo "-----> Starting sinopia container..."
       SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
       docker wait $SINOPIA_CONTAINER > /dev/null
