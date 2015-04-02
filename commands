@@ -7,6 +7,39 @@ SINOPIA_CONTAINER_RUNNING=$(docker ps | grep sinopia-registry | awk '{print $1}'
 SINOPIA_STORAGE_IMAGE=$(docker images | grep creativecoding/sinopia-storage | awk '{print $1}')
 SINOPIA_STORAGE_CONTAINER=$(docker ps -a | grep sinopia-storage | awk '{print $1}')
 
+build_sinopia_image() {
+  echo
+  echo "-----> Sinopia image not found. Building..."
+  docker build -q=true -t creativecoding/sinopia github.com/creativecodingos/dokku-sinopia-dockerfiles.git > /dev/null
+  echo "       Image builded as creativecoding/sinopia"
+  echo
+}
+
+build_sinopia_storage_image() {
+  echo
+  echo "-----> Sinopia storage image not found. Building..."
+  docker build -q=true -t creativecoding/sinopia-storage github.com/creativecodingos/dokku-sinopia-storage-dockerfiles.git > /dev/null
+  echo "       Image builded as creativecoding/sinopia-storage"
+  echo
+}
+
+init_storage_container() {
+  echo "-----> Initializing the sinopia storage container..."
+  SINOPIA_STORAGE_CONTAINER=$(docker run -d --name sinopia-storage creativecoding/sinopia-storage /bin/bash "exit 0")
+  docker wait $SINOPIA_STORAGE_CONTAINER > /dev/null
+  echo "       Done."
+  echo
+}
+
+run_sinopia_container() {
+  echo "-----> Starting sinopia container..."
+  SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
+  SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
+  sleep 5
+  echo "       Done."
+  echo
+}
+
 case "$1" in
   
   sinopia)
@@ -17,33 +50,16 @@ case "$1" in
     fi
     
     if [[ -z $SINOPIA_IMAGE ]]; then
-      echo
-      echo "-----> Sinopia image not found. Building..."
-      docker build -q=true -t creativecoding/sinopia github.com/creativecodingos/dokku-sinopia-dockerfiles.git > /dev/null
-      echo "       Image builded as creativecoding/sinopia"
-      echo
+      build_sinopia_image
     fi
     if [[ -z $SINOPIA_STORAGE_IMAGE ]]; then
-      echo
-      echo "-----> Sinopia storage image not found. Building..."
-      docker build -q=true -t creativecoding/sinopia-storage github.com/creativecodingos/dokku-sinopia-storage-dockerfiles.git > /dev/null
-      echo "       Image builded as creativecoding/sinopia-storage"
-      echo
+      build_sinopia_storage_image
     fi
     if [[ -z $SINOPIA_STORAGE_CONTAINER ]]; then
-      echo "-----> Initializing the sinopia storage container..."
-      SINOPIA_STORAGE_CONTAINER=$(docker run -d --name sinopia-storage creativecoding/sinopia-storage /bin/bash "exit 0")
-      docker wait $SINOPIA_STORAGE_CONTAINER > /dev/null
-      echo "       Done."
-      echo
+      init_storage_container
     fi
     if [[ -z $SINOPIA_CONTAINER ]]; then
-      echo "-----> Starting sinopia container..."
-      SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
-      SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
-      sleep 5
-      echo "       Done."
-      echo
+      run_sinopia_container
     fi
     
     SINOPIA_IP=$(docker inspect $SINOPIA_CONTAINER | grep IPAddress | awk '{ print $2 }' | tr -d ',"')
@@ -61,6 +77,22 @@ case "$1" in
     echo "       Container IP: $SINOPIA_IP"
     echo "       Container PORT: 4873"
     echo
+    ;;
+    
+  sinopia:stop)
+    if [[ ! -z $SINOPIA_CONTAINER_RUNNING ]]; then
+      echo
+      echo "-----> Stopping sinopia container"
+      ID=$(docker stop $SINOPIA_CONTAINER_RUNNING)
+      docker wait $ID
+      echo "       Done."
+      echo
+      dokku sinopia
+    else
+      echo
+      echo "       Sinopia container is not running"
+      echo
+    fi
     ;;
     
   sinopia:expose)
