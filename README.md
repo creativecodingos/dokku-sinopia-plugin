@@ -32,5 +32,7 @@ Simple usage
 
 Get infos about sinopia
 ```
+# This command will install sinopia the first time it is run
+
 $ dokku sinopia
 ```
