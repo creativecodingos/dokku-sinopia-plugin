@@ -49,7 +49,7 @@ backup_sinopia() {
   echo "-----> Starting backup of Sinopia"
   echo 
   NOW=$(date -u +"%Y-%m-%dT%H.%M.%SZ")
-  BACKUP_FILE="Sinopia_backup_$NOW"
+  BACKUP_FILE="Sinopia_backup_$NOW.tar.gz"
   ID=$(docker run -d --volumes-from sinopia-storage -v $BACKUPS_DIR:/backups busybox /bin/bash "cd /data/sinopia && tar -czf /backups/$BACKUP_FILE .")
   docker wait $ID > /dev/null
   # docker rm $ID > /dev/null
