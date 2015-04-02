@@ -36,13 +36,14 @@ init_storage_container() {
 }
 
 run_sinopia_container() {
+  echo
   echo "-----> Starting Sinopia container..."
   SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
   SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
   sleep 5
   ID=$(docker run -d --volumes-from sinopia-storage -v $HOST_DIR:/sinopia  ubuntu /bin/bash -c "cp /data/sinopia/config.yaml /sinopia/config.yaml")
-  
   docker wait $ID > /dev/null
+  docker rm $ID > /dev/null
   echo "       Done."
   echo
 }
@@ -159,7 +160,24 @@ case "$1" in
     ;;
     
   sinopia:reconfig)
-    echo "reconfig"
+    if [[ -f $CONFIG_FILE ]]; then
+      echo
+      echo "-----> Injecting config.yaml in Sinopia"
+      ID=$(docker run -d --volumes-from sinopia-storage -v $HOST_DIR:/sinopia  ubuntu /bin/bash -c "cp /sinopia/config.yaml /data/sinopia/config.yaml")
+      docker wait $ID > /dev/null
+      docker rm $ID > /dev/null
+      echo "       Done."
+      
+      if [[ -n $SINOPIA_CONTAINER_RUNNING ]]; then
+        echo
+        echo "-----> Restarting Sinopia"
+        docker wait $(docker stop $SINOPIA_CONTAINER_RUNNING) > /dev/null
+        docker rm $SINOPIA_CONTAINER_RUNNING > /dev/null
+        run_sinopia_container
+        dokku sinopia
+      fi
+      
+    fi
     ;;
     
   sinopia:remove)
