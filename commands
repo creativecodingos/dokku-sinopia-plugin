@@ -50,7 +50,7 @@ backup_sinopia() {
   echo 
   NOW=$(date -u +"%Y-%m-%dT%H.%M.%SZ")
   BACKUP_FILE="Sinopia_backup_$NOW.tar.gz"
-  ID=$(docker run -d --volumes-from sinopia-storage -v $BACKUPS_DIR:/backups dockerfile/nodejs "cd /data/sinopia && tar -czf /backups/$BACKUP_FILE .")
+  ID=$(docker run -d --volumes-from sinopia-storage -v $BACKUPS_DIR:/backups ubuntu tar -czf /backups/$BACKUP_FILE -C /data ./sinopia)
   docker wait $ID > /dev/null
   # docker rm $ID > /dev/null
   echo
