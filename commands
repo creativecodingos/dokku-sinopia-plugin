@@ -5,23 +5,23 @@ set -e;
 case "$1" in
   
   sinopia)
-    
+    echo "info"
     ;;
     
   sinopia:expose)
-    
+    echo "expose"
     ;;
   
   sinopia:hide)
-    
+    echo "hide"
     ;;
     
   sinopia:backup)
-    
+    echo "backup"
     ;;
     
   sinopia:reconfig)
-    
+    echo "reconfig"
     ;;
     
   sinopia:remove)
