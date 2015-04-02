@@ -1,11 +1,65 @@
 #!/usr/bin/env bash
-
 set -e;
+
+SINOPIA_IMAGE=$(docker images | grep creativecoding/sinopia | awk '{print $1}')
+SINOPIA_CONTAINER=$(docker ps -a | grep sinopia-registry | awk '{print $1}')
+SINOPIA_CONTAINER_RUNNING=$(docker ps -a | grep sinopia-registry | awk '{print $1}')
+SINOPIA_STORAGE_IMAGE=$(docker images | grep creativecoding/sinopia-storage | awk '{print $1}')
+SINOPIA_STORAGE_CONTAINER=$(docker ps -a | grep sinopia-storage | awk '{print $1}')
 
 case "$1" in
   
   sinopia)
-    echo "info"
+    HOST_DIR="$DOKKU_ROOT/.sinopia"
+    if [[ ! -d $HOST_DIR ]]; then
+      mkdir -p $HOST_DIR/.data
+      mkdir -p $HOST_DIR/backups
+    fi
+    
+    if [[ -z $SINOPIA_IMAGE ]]; then
+      echo
+      echo "-----> Sinopia image not found. Building..."
+      docker build -q=true -t creativecoding/sinopia github.com/creativecodingos/dokku-sinopia-dockerfiles.git > /dev/null
+      echo "       Image builded as creativecoding/sinopia"
+      echo
+    fi
+    if [[ -z $SINOPIA_STORAGE_IMAGE ]]; then
+      echo
+      echo "-----> Sinopia storage image not found. Building..."
+      docker build -q=true -t creativecoding/sinopia-storage github.com/creativecodingos/dokku-sinopia-storage-dockerfiles.git > /dev/null
+      echo "       Image builded as creativecoding/sinopia-storage"
+      echo
+    fi
+    if [[ -z $SINOPIA_STORAGE_CONTAINER ]]; then
+      echo "-----> Initializing the sinopia storage container..."
+      SINOPIA_STORAGE_CONTAINER=$(docker run -d --name sinopia-storage creativecoding/sinopia-storage /bin/bash "exit 0")
+      docker wait $SINOPIA_STORAGE_CONTAINER > /dev/null
+      echo "       Done."
+      echo
+    fi
+    if [[ -z $SINOPIA_CONTAINER]]; then
+      echo "-----> Starting sinopia container..."
+      SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
+      docker wait $SINOPIA_CONTAINER > /dev/null
+      SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
+      echo "       Done."
+      echo
+    fi
+    
+    SINOPIA_IP=$(docker inspect $SINOPIA_CONTAINER | grep IPAddress | awk '{ print $2 }' | tr -d ',"')
+    if [[ -z $SINOPIA_CONTAINER_RUNNING ]]; then
+      SINOPIA_STATUS="stopped"
+    else
+      SINOPIA_STATUS="running"
+    fi
+    
+    echo "-----> Infos about Sinopia registry:"
+    echo
+    echo "       Status: $SINOPIA_STATUS"
+    echo "       Container: $SINOPIA_CONTAINER"
+    echo "       Container IP: $SINOPIA_IP"
+    echo "       Container PORT: 4873"
+    echo
     ;;
     
   sinopia:expose)
