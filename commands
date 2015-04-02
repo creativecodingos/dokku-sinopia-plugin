@@ -32,7 +32,7 @@ init_storage_container() {
 }
 
 run_sinopia_container() {
-  echo "-----> Starting sinopia container..."
+  echo "-----> Starting Sinopia container..."
   SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
   SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
   sleep 5
@@ -82,9 +82,9 @@ case "$1" in
   sinopia:stop)
     if [[ ! -z $SINOPIA_CONTAINER_RUNNING ]]; then
       echo
-      echo "-----> Stopping sinopia container"
+      echo "-----> Stopping Sinopia container"
       ID=$(docker stop $SINOPIA_CONTAINER_RUNNING)
-      docker wait $ID
+      docker wait $ID > /dev/null
       echo "       Done."
       echo
       dokku sinopia
@@ -92,6 +92,30 @@ case "$1" in
       echo
       echo "       Sinopia container is not running"
       echo
+    fi
+    ;;
+    
+  sinopia:start)
+    if [[ -z $SINOPIA_CONTAINER_RUNNING ]]; then
+      echo
+      echo "-----> Sinopia is already running"
+      echo
+      dokku sinopia
+      exit 0
+    else
+    
+      if [[ -z $SINOPIA_CONTAINER ]]; then
+        dokku sinopia
+      else
+        echo
+        echo "-----> Restarting Sinopia container..."
+        echo
+        docker start $SINOPIA_CONTAINER > /dev/null
+        sleep 5
+        echo "       Done."
+        dokku sinopia
+      fi
+      
     fi
     ;;
     
