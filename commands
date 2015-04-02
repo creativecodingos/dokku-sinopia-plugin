@@ -2,8 +2,8 @@
 set -e;
 
 HOST_DIR="$DOKKU_ROOT/.sinopia"
-DATA_DIR="$HOST_DIR/.data"
 BACKUPS_DIR="$HOST_DIR/backups"
+CONFIG_FILE="$HOST_DIR/config.yaml"
 
 SINOPIA_IMAGE=$(docker images | grep creativecoding/sinopia | awk '{print $1}')
 SINOPIA_CONTAINER=$(docker ps -a | grep sinopia-registry | awk '{print $1}')
@@ -40,6 +40,9 @@ run_sinopia_container() {
   SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
   SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
   sleep 5
+  ID=$(docker run -d --volumes-from sinopia-storage -v $HOST_DIR:/sinopia  ubuntu /bin/bash -c "cp /data/sinopia/config.yaml /sinopia/config.yaml")
+  
+  docker wait $ID > /dev/null
   echo "       Done."
   echo
 }
@@ -62,7 +65,6 @@ case "$1" in
   
   sinopia)
     if [[ ! -d $HOST_DIR ]]; then
-      mkdir -p $DATA_DIR
       mkdir -p $BACKUPS_DIR
     fi
     
