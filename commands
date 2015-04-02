@@ -52,7 +52,7 @@ backup_sinopia() {
   BACKUP_FILE="Sinopia_backup_$NOW"
   ID=$(docker run -d --volumes-from sinopia-storage -v $BACKUPS_DIR:/backups creativecoding/sinopia /bin/bash "cd /data/sinopia && tar -czv /backups/$BACKUP_FILE .")
   docker wait $ID > /dev/null
-  docker rm $ID
+  docker rm $ID > /den/null
   echo
   echo "-----> Backup file avaliable: $BACKUPS_DIR/$BACKUP_FILE"
   echo
