@@ -3,7 +3,7 @@ set -e;
 
 SINOPIA_IMAGE=$(docker images | grep creativecoding/sinopia | awk '{print $1}')
 SINOPIA_CONTAINER=$(docker ps -a | grep sinopia-registry | awk '{print $1}')
-SINOPIA_CONTAINER_RUNNING=$(docker ps -a | grep sinopia-registry | awk '{print $1}')
+SINOPIA_CONTAINER_RUNNING=$(docker ps | grep sinopia-registry | awk '{print $1}')
 SINOPIA_STORAGE_IMAGE=$(docker images | grep creativecoding/sinopia-storage | awk '{print $1}')
 SINOPIA_STORAGE_CONTAINER=$(docker ps -a | grep sinopia-storage | awk '{print $1}')
 
@@ -40,8 +40,8 @@ case "$1" in
     if [[ -z $SINOPIA_CONTAINER ]]; then
       echo "-----> Starting sinopia container..."
       SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
-      docker wait $SINOPIA_CONTAINER > /dev/null
       SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
+      sleep 5
       echo "       Done."
       echo
     fi
