@@ -53,6 +53,7 @@ case "$1" in
       SINOPIA_STATUS="running"
     fi
     
+    echo
     echo "-----> Infos about Sinopia registry:"
     echo
     echo "       Status: $SINOPIA_STATUS"
