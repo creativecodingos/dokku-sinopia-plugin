@@ -19,6 +19,8 @@ build_sinopia_image() {
   echo
 }
 
+# We use the data only container pattern
+# http://container42.com/2013/12/16/persistent-volumes-with-docker-container-as-volume-pattern/
 build_sinopia_storage_image() {
   echo
   echo "-----> Sinopia storage image not found. Building..."
