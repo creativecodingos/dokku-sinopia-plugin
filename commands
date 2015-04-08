@@ -65,6 +65,19 @@ backup_sinopia() {
   echo
 }
 
+list_users() {
+  USERS=$(docker run -a stdout --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage cat sinopia/htpasswd | awk -F':' '{ print $1}')
+  docker wait $USERS > /dev/null
+  echo
+  echo "-----> List of the Sinopia Registry users:"
+  echo "       $USERS"
+  echo
+}
+
+add_user() {
+
+}
+
 case "$1" in
   
   sinopia)
@@ -179,7 +192,12 @@ case "$1" in
         run_sinopia_container
         dokku sinopia
       fi
-      
+    
+    else
+      echo
+      echo "      Sinopia configuration file not found"
+      echo "      Please save a configuration file as $CONFIG_FILE"
+      echo    
     fi
     ;;
     
@@ -202,17 +220,15 @@ case "$1" in
       echo
       exit 0
     fi
-    USERNAME="$1"
-    PASSWORD="$2"
+    USERNAME="$2"
+    PASSWORD="$3"
     if [[ -z $USERNAME ]]; then
       echo
       echo "       Invalid command. Please type 'dokku sinopia:adduser <username> [<password>]' to add a user or modify a user password"
       echo
       exit 0
     fi
-    
-    echo "$1 $2"
-    
+    add_user $USERNAME $PASSWORD    
     ;;
     
   sinopia:remove)
