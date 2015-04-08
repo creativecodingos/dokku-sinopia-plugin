@@ -66,8 +66,10 @@ backup_sinopia() {
 }
 
 list_users() {
-  USERS=$(docker run -a stdout --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage cat sinopia/htpasswd | awk -F':' '{ print $1}')
-  docker rm tmp_sinopia > /dev/null
+  NOW=$(date -u +"%Y-%m-%dT%H.%M.%SZ")
+  TMP_NAME="tmp_sinopia_$NOW"
+  USERS=$(docker run -a stdout --name $TMP_NAME --volumes-from sinopia-storage creativecoding/sinopia-storage cat sinopia/htpasswd | awk -F':' '{ print $1}')
+  docker rm $TMP_NAME > /dev/null
   echo
   echo "-----> List of the Sinopia Registry users:"
   echo
@@ -76,13 +78,28 @@ list_users() {
 }
 
 add_user() {
+  NOW=$(date -u +"%Y-%m-%dT%H.%M.%SZ")
+  TMP_NAME="tmp_sinopia_$NOW"
   USERNAME=$1
   
   CMD="cd sinopia && htpasswd -s htpasswd $USERNAME && exit 0"
-  docker run -it --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage /bin/bash -c "$CMD"
-  docker rm tmp_sinopia > /dev/null
+  docker run -it --name $TMP_NAME --volumes-from sinopia-storage creativecoding/sinopia-storage /bin/bash -c "$CMD"
+  docker rm $TMP_NAME > /dev/null
   echo
   list_users  
+}
+
+remove_user() {
+  USERNAME=$1
+  
+  CMD="cd sinopia && htpasswd -D htpasswd $USERNAME"
+  ID=$(docker run -d --volumes-from sinopia-storage creativecoding/sinopia-storage /bin/bash -c "$CMD")
+  docker wait $ID > /dev/null
+  docker rm $ID > /dev/null
+  echo
+  echo "-----> User '$USERNAME' removed"
+  echo
+  list_users
 }
 
 case "$1" in
@@ -237,13 +254,31 @@ case "$1" in
     add_user $USERNAME
     ;;
     
-  sinopia:remove)
+  sinopia:rmuser)
+    if [[ -z $SINOPIA_STORAGE_CONTAINER ]]; then
+      echo
+      echo "-----> There are no data of a Sinopia installation"
+      echo "       Pleas run 'dokku sinopia' to start a Sinopia registry"
+      echo
+      exit 0
+    fi
     
+    USERNAME="$2"
+    if [[ -z $USERNAME ]]; then
+      echo
+      echo "       Invalid command. Please type 'dokku sinopia:rmuser <username> to remove a user from the registry"
+      echo
+      exit 0
+    fi
+    remove_user $USERNAME    
     ;;
 
   help)
     cat && cat<<EOF
     sinopia                     Get infos about the private sinopia registry
+    sinopia:users               Prints the list of the users able to authenticate to the registry
+    sinopia:adduser <username>  Add a user to Sinopia or modify a user password
+    sinopia:rmuser <username>   Remove a user from the Sinopia registry    
     sinopia:expose              Binds the sinopia container to a higher port on host (restarts sinopia)
     sinopia:hide                Unbinds the sinopia container from a port on host (restarts sinopia)
     sinopia:backup              Backups the sinopia storage folder
