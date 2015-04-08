@@ -67,7 +67,7 @@ backup_sinopia() {
 
 list_users() {
   USERS=$(docker run -a stdout --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage cat sinopia/htpasswd | awk -F':' '{ print $1}')
-  wait $USERS > /dev/null
+  docker rm tmp_sinopia > /dev/null
   echo
   echo "-----> List of the Sinopia Registry users:"
   echo "       $USERS"
