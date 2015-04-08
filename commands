@@ -57,12 +57,94 @@ backup_sinopia() {
   echo 
   NOW=$(date -u +"%Y-%m-%dT%H.%M.%SZ")
   BACKUP_FILE="Sinopia_backup_$NOW.tar.gz"
+  BACKUP_FILE_PATH="$BACKUPS_DIR/$BACKUP_FILE"
   ID=$(docker run -d --volumes-from sinopia-storage -v $BACKUPS_DIR:/backups ubuntu tar -czf /backups/$BACKUP_FILE -C /data ./sinopia)
   docker wait $ID > /dev/null
   docker rm $ID > /dev/null
   echo
-  echo "-----> Backup file avaliable: $BACKUPS_DIR/$BACKUP_FILE"
+  echo "-----> Backup file avaliable: $BACKUP_FILE_PATH"
   echo
+  
+  S3_FILE="$HOST_DIR/S3"
+  if [[ -f $S3_FILE ]]; then
+    echo
+    echo "-----> Detected S3 configuration file"
+    echo
+    s3_backup $BACKUP_FILE_PATH $BACKUP_FILE
+  fi
+}
+
+HMAC-SHA256s(){
+  KEY="$1"
+  DATA="$2"
+  shift 2
+  printf "$DATA" | openssl dgst -binary -sha256 -hmac "$KEY" | od -An -vtx1 | sed 's/[ \n]//g' | sed 'N;s/\n//'
+}
+
+HMAC-SHA256h(){
+  KEY="$1"
+  DATA="$2"
+  shift 2
+  printf "$DATA" | openssl dgst -binary -sha256 -mac HMAC -macopt "hexkey:$KEY" | od -An -vtx1 | sed 's/[ \n]//g' | sed 'N;s/\n//'
+}
+
+s3_backup() {
+  BACKUP_FILE_PATH=$2
+  BACKUP_FILE=$3
+  
+  source "$BACKUP_FILE_PATH"
+  
+  if [ -n "$S3_KEY" ] && [ -n "$S3_SECRET" ] && [ -n "$BUCKET" ] && [ -n "$REGION" ]; then
+    echo
+    echo "-----> Starting file transfer of $BACKUP_FILE"
+    echo
+
+    CONTENT_TYPE="application/octet-stream"
+
+    if [[ -n "$PREFIX" ]]; then
+      KEY="$PREFIX/$BACKUP_FILE"
+    else
+      KEY="$BACKUP_FILE"
+    fi
+
+
+    REQUEST_TIME=$(date +"%Y%m%dT%H%M%SZ")
+    REQUEST_DATE=$(printf "${REQUEST_TIME}" | cut -c 1-8)
+    AWS4SECRET="AWS4"$S3_SECRET
+    ALGORITHM="AWS4-HMAC-SHA256"
+    EXPIRE=$(date --date="+30 minutes" -u +"%Y-%m-%dT%H:%M:%SZ")
+    ACL="private"
+
+    POST_POLICY='{"expiration":"'$EXPIRE'","conditions": [{"bucket":"'$BUCKET'" },{"acl":"'$ACL'" },["starts-with", "$key", "'$KEY'"],["eq", "$Content-Type", "application/octet-stream"],{"x-amz-credential":"'$S3_KEY'/'$REQUEST_DATE'/'$REGION'/s3/aws4_request"},{"x-amz-algorithm":"'$ALGORITHM'"},{"x-amz-date":"'$REQUEST_TIME'"}]}'
+
+    UPLOAD_REQUEST=$(printf "$POST_POLICY" | openssl base64 )
+    UPLOAD_REQUEST=$(echo -en $UPLOAD_REQUEST |  sed "s/ //g")
+
+    SIGNATURE=$(HMAC-SHA256h $(HMAC-SHA256h $(HMAC-SHA256h $(HMAC-SHA256h $(HMAC-SHA256s $AWS4SECRET $REQUEST_DATE ) $REGION) "s3") "aws4_request") $UPLOAD_REQUEST)
+
+    curl \
+    	-F "key=""$KEY" \
+    	-F "acl="$ACL"" \
+    	-F "Content-Type="application/octet-stream"" \
+    	-F "x-amz-algorithm="$ALGORITHM"" \
+    	-F "x-amz-credential="$S3_KEY/$REQUEST_DATE/$REGION/s3/aws4_request"" \
+    	-F "x-amz-date="$REQUEST_TIME"" \
+    	-F "Policy="$UPLOAD_REQUEST"" \
+    	-F "X-Amz-Signature="$SIGNATURE"" \
+    	-F "file=@"$BACKUP_FILE_PATH http://$BUCKET.s3.amazonaws.com/
+
+    echo
+    echo "=====> Backup archive transferred to S3"
+    echo "       https://s3.$REGION.amazonaws.com/$BUCKET/$KEY"
+    echo
+    echo       
+
+  else
+    echo
+    echo "-----> S3 configuration file is not valid"
+    echo "=====> Aborting S3 upload"
+    echo
+  fi  
 }
 
 list_users() {
