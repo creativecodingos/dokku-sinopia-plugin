@@ -43,6 +43,7 @@ run_sinopia_container() {
   SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
   SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
   sleep 5
+  ## copy the running config.yaml to the host for user editing
   ID=$(docker run -d --volumes-from sinopia-storage -v $HOST_DIR:/sinopia  ubuntu /bin/bash -c "cp /data/sinopia/config.yaml /sinopia/config.yaml")
   docker wait $ID > /dev/null
   docker rm $ID > /dev/null
@@ -58,7 +59,7 @@ backup_sinopia() {
   BACKUP_FILE="Sinopia_backup_$NOW.tar.gz"
   ID=$(docker run -d --volumes-from sinopia-storage -v $BACKUPS_DIR:/backups ubuntu tar -czf /backups/$BACKUP_FILE -C /data ./sinopia)
   docker wait $ID > /dev/null
-  # docker rm $ID > /dev/null
+  docker rm $ID > /dev/null
   echo
   echo "-----> Backup file avaliable: $BACKUPS_DIR/$BACKUP_FILE"
   echo
@@ -84,11 +85,11 @@ case "$1" in
       run_sinopia_container
     fi
     
-    SINOPIA_IP=$(docker inspect $SINOPIA_CONTAINER | grep IPAddress | awk '{ print $2 }' | tr -d ',"')
     if [[ -z $SINOPIA_CONTAINER_RUNNING ]]; then
       SINOPIA_STATUS="stopped"
     else
       SINOPIA_STATUS="running"
+      SINOPIA_IP=$(docker inspect $SINOPIA_CONTAINER | grep IPAddress | awk '{ print $2 }' | tr -d ',"')
     fi
     
     echo
@@ -180,6 +181,38 @@ case "$1" in
       fi
       
     fi
+    ;;
+    
+  sinopia:users)
+    if [[ -z $SINOPIA_STORAGE_CONTAINER ]]; then
+      echo
+      echo "-----> There are no data of a Sinopia installation"
+      echo "       Pleas run 'dokku sinopia' to start a Sinopia registry"
+      echo
+      exit 0
+    fi
+    list_users
+    ;;
+    
+  sinopia:adduser)
+    if [[ -z $SINOPIA_STORAGE_CONTAINER ]]; then
+      echo
+      echo "-----> There are no data of a Sinopia installation"
+      echo "       Pleas run 'dokku sinopia' to start a Sinopia registry"
+      echo
+      exit 0
+    fi
+    USERNAME="$1"
+    PASSWORD="$2"
+    if [[ -z $USERNAME]]; then
+      echo
+      echo "       Invalid command. Please type 'dokku sinopia:adduser <username> [<password>]' to add a user or modify a user password"
+      echo
+      exit 0
+    fi
+    
+    echo "$1 $2"
+    
     ;;
     
   sinopia:remove)
