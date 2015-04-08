@@ -70,11 +70,14 @@ list_users() {
   docker rm tmp_sinopia > /dev/null
   echo
   echo "-----> List of the Sinopia Registry users:"
-  for user in "${USERS[@]}"
-  do
-    echo "       ${user}"
-  done
   echo
+  echo "$USERS"
+  echo
+}
+
+add_user() {
+  echo $1
+  echo $2
 }
 
 case "$1" in
