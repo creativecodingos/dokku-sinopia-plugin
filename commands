@@ -70,7 +70,7 @@ backup_sinopia() {
     echo
     echo "-----> Detected S3 configuration file"
     echo
-    s3_backup $BACKUP_FILE_PATH $BACKUP_FILE
+    s3_backup $BACKUP_FILE_PATH $BACKUP_FILE $S3_FILE
   fi
 }
 
@@ -91,6 +91,7 @@ HMAC-SHA256h(){
 s3_backup() {
   BACKUP_FILE_PATH=$2
   BACKUP_FILE=$3
+  S3_FILE=$4
   
   source "$BACKUP_FILE_PATH"
   
