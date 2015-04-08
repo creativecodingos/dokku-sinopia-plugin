@@ -82,8 +82,7 @@ add_user() {
   if [[ -z $PASSWORD ]]; then
     CMD="cd sinopia && htpasswd htpasswd $USER && exit 0"
     docker run -it --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage $CMD
-    docker rm tmp_sinopia > /dev/null
-  else  
+    docker rm tmp_sinopia > /dev/null  
   
   fi
 }
