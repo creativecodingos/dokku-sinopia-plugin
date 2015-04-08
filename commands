@@ -40,7 +40,7 @@ init_storage_container() {
 run_sinopia_container() {
   echo
   echo "-----> Starting Sinopia container..."
-  SINOPIA_CONTAINER=$(docker run -d -P --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
+  SINOPIA_CONTAINER=$(docker run -d -p 4873:4873 --name sinopia-registry --volumes-from sinopia-storage creativecoding/sinopia)
   SINOPIA_CONTAINER_RUNNING=$SINOPIA_CONTAINER
   sleep 5
   ## copy the running config.yaml to the host for user editing
@@ -261,14 +261,6 @@ case "$1" in
       fi
       
     fi
-    ;;
-    
-  sinopia:expose)
-    echo "expose"
-    ;;
-  
-  sinopia:hide)
-    echo "hide"
     ;;
     
   sinopia:backup)
