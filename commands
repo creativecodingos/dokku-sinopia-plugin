@@ -76,15 +76,13 @@ list_users() {
 }
 
 add_user() {
-  USER=$1
-  PASSWORD=$2
+  USERNAME=$1
   
-  if [[ -z $PASSWORD ]]; then
-    CMD="cd sinopia && htpasswd htpasswd $USER && exit 0"
-    docker run -it --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage /bin/bash -c "$CMD"
-    docker rm tmp_sinopia > /dev/null  
-  
-  fi
+  CMD="cd sinopia && htpasswd -s htpasswd $USERNAME && exit 0"
+  docker run -it --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage /bin/bash -c "$CMD"
+  docker rm tmp_sinopia > /dev/null
+  echo
+  list_users  
 }
 
 case "$1" in
@@ -230,14 +228,13 @@ case "$1" in
       exit 0
     fi
     USERNAME="$2"
-    PASSWORD="$3"
     if [[ -z $USERNAME ]]; then
       echo
       echo "       Invalid command. Please type 'dokku sinopia:adduser <username> [<password>]' to add a user or modify a user password"
       echo
       exit 0
     fi
-    add_user $USERNAME $PASSWORD    
+    add_user $USERNAME
     ;;
     
   sinopia:remove)
