@@ -204,7 +204,7 @@ case "$1" in
     fi
     USERNAME="$1"
     PASSWORD="$2"
-    if [[ -z $USERNAME]]; then
+    if [[ -z $USERNAME ]]; then
       echo
       echo "       Invalid command. Please type 'dokku sinopia:adduser <username> [<password>]' to add a user or modify a user password"
       echo
