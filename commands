@@ -74,10 +74,6 @@ list_users() {
   echo
 }
 
-add_user() {
-
-}
-
 case "$1" in
   
   sinopia)
