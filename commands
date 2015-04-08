@@ -93,7 +93,7 @@ s3_backup() {
   BACKUP_FILE=$3
   S3_FILE=$4
   
-  source "$BACKUP_FILE_PATH"
+  source "$S3_FILE"
   
   if [ -n "$S3_KEY" ] && [ -n "$S3_SECRET" ] && [ -n "$BUCKET" ] && [ -n "$REGION" ]; then
     echo
