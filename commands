@@ -76,8 +76,16 @@ list_users() {
 }
 
 add_user() {
-  echo $1
-  echo $2
+  USER=$1
+  PASSWORD=$2
+  
+  if [[ -z $PASSWORD ]]; then
+    CMD="cd sinopia && htpasswd htpasswd $USER && exit 0"
+    docker run -it --name tmp_sinopia --volumes-from sinopia-storage creativecoding/sinopia-storage $CMD
+    docker rm tmp_sinopia > /dev/null
+  else  
+  
+  fi
 }
 
 case "$1" in
