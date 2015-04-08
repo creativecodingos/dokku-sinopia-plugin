@@ -89,11 +89,9 @@ HMAC-SHA256h(){
 }
 
 s3_backup() {
-  BACKUP_FILE_PATH=$2
-  BACKUP_FILE=$3
-  S3_FILE=$4
-  
-  echo $BACKUP_FILE_PATH
+  BACKUP_FILE_PATH=$1
+  BACKUP_FILE=$2
+  S3_FILE=$3
   
   source "$S3_FILE"
   
