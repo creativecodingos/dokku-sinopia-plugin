@@ -358,20 +358,6 @@ case "$1" in
             * ) echo "Please answer yes or no.";;
         esac
     done
-    
-    exit
-    echo "Do you really wish to remove the Sinopia registry and all of its contents?"
-    select yn in "Yes" "No"; do
-      case $yn in
-        Yes)
-          exit 1
-          ;;
-        
-        No)
-          exit 0
-          ;;
-      esac
-    done
     ;;
 
   help)
