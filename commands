@@ -350,6 +350,16 @@ case "$1" in
     
   sinopia:remove)
     echo
+    while true; do
+        read -p "Do you really wish to remove the Sinopia registry and all of its contents? (Y/N)" yn
+        case $yn in
+            [Yy]* ) echo "ok"; break;;
+            [Nn]* ) exit;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+    
+    exit
     echo "Do you really wish to remove the Sinopia registry and all of its contents?"
     select yn in "Yes" "No"; do
       case $yn in
