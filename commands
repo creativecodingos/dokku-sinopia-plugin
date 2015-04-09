@@ -347,15 +347,31 @@ case "$1" in
     fi
     remove_user $USERNAME    
     ;;
+    
+  sinopia:remove)
+    echo
+    echo "Do you really wish to remove the Sinopia registry and all of its contents?"
+    select yn in "Yes" "No"; do
+      case $yn in
+        Yes)
+          exit 1
+          ;;
+        
+        No)
+          exit 0
+          ;;
+      esac
+    done
+    ;;
 
   help)
     cat && cat<<EOF
     sinopia                     Get infos about the private sinopia registry
+    sinopia:start
+    sinopia:stop
     sinopia:users               Prints the list of the users able to authenticate to the registry
     sinopia:adduser <username>  Add a user to Sinopia or modify a user password
     sinopia:rmuser <username>   Remove a user from the Sinopia registry    
-    sinopia:expose              Binds the sinopia container to a higher port on host (restarts sinopia)
-    sinopia:hide                Unbinds the sinopia container from a port on host (restarts sinopia)
     sinopia:backup              Backups the sinopia storage folder
     sinopia:reconfig            Updates the sinopia config (restarts sinopia)
     sinopia:remove              Deletes the sinopia containers and the sinopia folder on dokku host
